@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
 
-void main() {
+import 'HomeScreen/HomeActivity.dart';
+import 'LoginScreen/LoginActivity.dart';
+import 'LoginScreen/SignUpActivity.dart';
+import 'Services/SharedService.dart';
+
+Widget _defaultHome = LoginActivity();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  bool isLoggedIn = await SharedService.isLoggedIn();
+  if (isLoggedIn){
+    _defaultHome = HomeActivity();
+  }
   runApp(MyApp());
 }
 
@@ -22,7 +33,13 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      routes: {
+        '/': (context) => _defaultHome,
+        '/home': (context) => HomeActivity(),
+        '/login': (context) => LoginActivity(),
+        '/signup': (context) => SignUpActivity(),
+      },
+
     );
   }
 }
