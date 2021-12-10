@@ -5,6 +5,8 @@ import 'dart:io';
 
 import 'package:chat_bot/Model/LoginRequestModel.dart';
 import 'package:chat_bot/Model/LoginRespondModel.dart';
+import 'package:chat_bot/Model/MessageRequestModel.dart';
+import 'package:chat_bot/Model/MessageRespondModel.dart';
 import 'package:chat_bot/Model/RegisterRequestModel.dart';
 import 'package:http/http.dart' as http;
 
@@ -43,5 +45,18 @@ class APIService {
     return false;
     //return registerRespondModel(respone.body);
   }
+
+  static Future<MessageRespondModel> sendMessage(MessageRequestModel model) async {
+    var url = Uri.parse(Config.apiURL + Config.sendMessage);
+    var loginDetails = await SharedService.loginDetails();
+    var respone = await client.post(url,
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'x-access-token': '${loginDetails.token}',
+        },
+        body: jsonEncode(model.toJson()));
+    return messageRespondModel(respone.body);
+  }
+
 
 }

@@ -3,4 +3,5 @@ class Config {
   static const String apiURL = "http://yourchatstarter.xyz";
   static const String loginAPI = "/api/auth/login";
   static const String registerAPI = "/api/auth/register";
+  static const String sendMessage = "/api/send_message";
 }

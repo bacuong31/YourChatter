@@ -30,6 +30,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   snippet_coder_utils: ^1.0.9
   api_cache_manager: ^1.0.2
+  bubble: ^1.2.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -51,6 +52,8 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets/images/Logo.png
+    - assets/images/robot.png
+    - assets/images/avatar_default.jpg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 
