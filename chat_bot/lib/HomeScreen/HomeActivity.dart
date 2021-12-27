@@ -1,3 +1,4 @@
+import 'package:avatar_glow/avatar_glow.dart';
 import 'package:chat_bot/Model/Message.dart';
 import 'package:chat_bot/Model/MessageRequestModel.dart';
 import 'package:chat_bot/Model/MessageRespondModel.dart';
@@ -6,7 +7,8 @@ import 'package:chat_bot/Services/SharedService.dart';
 import 'package:chat_bot/config.dart';
 import 'package:flutter/material.dart';
 import 'package:bubble/bubble.dart';
-
+import 'package:speech_to_text/speech_to_text.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
 import '../constants.dart';
 
 class HomeActivity extends StatefulWidget {
@@ -15,10 +17,56 @@ class HomeActivity extends StatefulWidget {
 }
 
 class HomeActivityState extends State<HomeActivity> {
+  SpeechToText _speechToText = SpeechToText();
+  bool _speechEnabled = false;
   List<Message> messages = [];
   List<String> suggestions = [];
-  MessageRespondModel preRespond = MessageRespondModel(response: "temp", context: null);
+  MessageRespondModel preRespond =
+      MessageRespondModel(response: "temp", context: null);
+
   final messageInsert = TextEditingController();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _initSpeech();
+  }
+
+  void _initSpeech() async {
+    _speechEnabled = await _speechToText.initialize();
+
+    setState(() {});
+  }
+
+  void _startListening() async {
+    var locales = await _speechToText.locales();
+
+    // get locale of vietnam
+    var selectedLocale = locales[121];
+
+    await _speechToText.listen(
+        onResult: _onSpeechResult, localeId: selectedLocale.localeId);
+    setState(() {});
+  }
+
+  /// Manually stop the active speech recognition session
+  /// Note that there are also timeouts that each platform enforces
+  /// and the SpeechToText plugin supports setting timeouts on the
+  /// listen method.
+  void _stopListening() async {
+    await _speechToText.stop();
+    setState(() {});
+  }
+
+  /// This is the callback that the SpeechToText plugin calls when
+  /// the platform returns recognized words.
+  void _onSpeechResult(SpeechRecognitionResult result) {
+    setState(() {
+      messageInsert.text = result.recognizedWords;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,13 +86,12 @@ class HomeActivityState extends State<HomeActivity> {
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: (){
+            onPressed: () {
               SharedService.logout(context);
             },
           )
         ],
       ),
-
       body: Container(
         child: Column(
           children: <Widget>[
@@ -57,28 +104,30 @@ class HomeActivityState extends State<HomeActivity> {
               height: 5.0,
               color: appPrimaryColor,
             ),
-            suggestions.length > 0 ? ConstrainedBox (
-              constraints: BoxConstraints(maxHeight: 50),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  scrollDirection: Axis.horizontal,
-                    itemCount: suggestions.length,
-                    itemBuilder: (context, index) => Center(child: suggestion(suggestions[index])))
-            )
-
-                : SizedBox(
-              height: 20,
-            ),
-
+            suggestions.length > 0
+                ? ConstrainedBox(
+                    constraints: BoxConstraints(maxHeight: 50),
+                    child: ListView.builder(
+                        shrinkWrap: true,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: suggestions.length,
+                        itemBuilder: (context, index) =>
+                            Center(child: suggestion(suggestions[index]))))
+                : Container(),
             Container(
               child: ListTile(
-                leading: IconButton(
-                  icon: Icon(
-                    Icons.keyboard_voice,
-                    color: appPrimaryColor,
-                    size: 35,
-                  ),
-                ),
+                leading:IconButton(
+                      icon: Icon(
+                        _speechToText.isNotListening ? Icons.mic_off : Icons.mic,
+                        color: appPrimaryColor,
+                        size: 35,
+                      ),
+                      onPressed: () {
+                        _speechToText.isNotListening
+                            ? _startListening()
+                            : _stopListening();
+                      }),
+
                 title: Container(
                   height: 40,
                   decoration: BoxDecoration(
@@ -120,20 +169,20 @@ class HomeActivityState extends State<HomeActivity> {
                         });
                         String saveMess = messageInsert.text;
                         messageInsert.clear();
-                          MessageRespondModel respond =
-                          await APIService.sendMessage(MessageRequestModel(
-                              post: saveMess,
-                              context: preRespond.context,
-                              isLocal: true));
-                          Message res = Message(
-                              response: respond.response,
-                              context: respond.context,
-                              isBot: true);
-                          setState(() {
-                            messages.insert(0, res);
-                            preRespond = respond;
-                            suggestions = respond.context.suggestionList;
-                          });
+                        MessageRespondModel respond =
+                            await APIService.sendMessage(MessageRequestModel(
+                                post: saveMess,
+                                context: preRespond.context,
+                                isLocal: true));
+                        Message res = Message(
+                            response: respond.response,
+                            context: respond.context,
+                            isBot: true);
+                        setState(() {
+                          messages.insert(0, res);
+                          preRespond = respond;
+                          suggestions = respond.context.suggestionList;
+                        });
                       }
                       FocusScopeNode currentFocus = FocusScope.of(context);
                       if (!currentFocus.hasPrimaryFocus) {
@@ -143,54 +192,53 @@ class HomeActivityState extends State<HomeActivity> {
               ),
             ),
             SizedBox(
-              height: 15.0,
+              height: 5.0,
             )
           ],
         ),
       ),
-
     );
   }
-  Widget suggestion(String value){
+
+  Widget suggestion(String value) {
     return Container(
       child: Row(
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: GestureDetector(
-              onTap: (){
+              onTap: () {
                 messageInsert.text = value;
               },
               child: Bubble(
                   radius: Radius.circular(15.0),
-                  color: appPrimaryColor,
+                  color: Colors.grey.withOpacity(0.3),
                   elevation: 0.0,
                   child: Padding(
-                    padding: EdgeInsets.only(left: 10.0,right: 10.0,top:2.0,bottom: 2.0),
+                    padding: EdgeInsets.only(
+                        left: 10.0, right: 10.0, top: 2.0, bottom: 2.0),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
                         Flexible(
                             child: Container(
-                              constraints: BoxConstraints(maxHeight: 200),
-                              child: Text(
-                                value,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    color: Colors.white, fontWeight: FontWeight.bold),
-                              ),
-                            )),
-
+                          constraints: BoxConstraints(maxHeight: 200),
+                          child: Text(
+                            value,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: Colors.black,
+                                ),
+                          ),
+                        )),
                       ],
                     ),
-                  )
-              ),
+                  )),
             ),
           ),
         ],
       ),
     );
-
   }
 
   Widget chat(Message message) {
@@ -216,8 +264,8 @@ class HomeActivityState extends State<HomeActivity> {
             child: Bubble(
                 radius: Radius.circular(15.0),
                 color: message.isBot == false
-                    ? Color.fromRGBO(252, 186, 3, 1)
-                    : appPrimaryColor,
+                    ? appPrimaryColor
+                    :Color.fromRGBO(252, 186, 3, 1),
                 elevation: 0.0,
                 child: Padding(
                   padding: EdgeInsets.all(2.0),
@@ -233,7 +281,7 @@ class HomeActivityState extends State<HomeActivity> {
                         child: Text(
                           message.response,
                           style: TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold),
+                              color: Colors.white),
                         ),
                       ))
                     ],
@@ -246,7 +294,8 @@ class HomeActivityState extends State<HomeActivity> {
                   width: 35,
                   child: CircleAvatar(
                     radius: 50.0,
-                    backgroundImage: AssetImage("assets/images/avatar_default.jpg"),
+                    backgroundImage:
+                        AssetImage("assets/images/avatar_default.jpg"),
                   ),
                 )
               : Container(),

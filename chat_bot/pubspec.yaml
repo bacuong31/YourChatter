@@ -31,6 +31,8 @@ dependencies:
   snippet_coder_utils: ^1.0.9
   api_cache_manager: ^1.0.2
   bubble: ^1.2.1
+  speech_to_text: ^5.4.2
+  avatar_glow: ^2.0.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
