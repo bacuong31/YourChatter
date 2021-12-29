@@ -33,6 +33,7 @@ dependencies:
   bubble: ^1.2.1
   speech_to_text: ^5.4.2
   avatar_glow: ^2.0.2
+  text_to_speech: ^0.2.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

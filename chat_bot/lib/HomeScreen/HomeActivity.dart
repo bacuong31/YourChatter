@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:bubble/bubble.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:text_to_speech/text_to_speech.dart';
 import '../constants.dart';
 
 class HomeActivity extends StatefulWidget {
@@ -18,6 +19,10 @@ class HomeActivity extends StatefulWidget {
 
 class HomeActivityState extends State<HomeActivity> {
   SpeechToText _speechToText = SpeechToText();
+  TextToSpeech _textToSpeech = TextToSpeech();
+  double volume = 1;
+  double rate = 1;
+  String languageCode;
   bool _speechEnabled = false;
   List<Message> messages = [];
   List<String> suggestions = [];
@@ -30,15 +35,23 @@ class HomeActivityState extends State<HomeActivity> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _initSpeech();
+    _initSpeechToText();
+    _initTextToSpeech();
   }
 
-  void _initSpeech() async {
+  void _initSpeechToText() async {
     _speechEnabled = await _speechToText.initialize();
 
     setState(() {});
   }
+  void _initTextToSpeech() async {
+    var language = await _textToSpeech.getLanguages();
 
+    setState(() {
+      //get vietnamese language code
+      languageCode = language[14];
+    });
+  }
   void _startListening() async {
     var locales = await _speechToText.locales();
 
@@ -183,6 +196,7 @@ class HomeActivityState extends State<HomeActivity> {
                           preRespond = respond;
                           suggestions = respond.context.suggestionList;
                         });
+                        speak(res.response);
                       }
                       FocusScopeNode currentFocus = FocusScope.of(context);
                       if (!currentFocus.hasPrimaryFocus) {
@@ -199,7 +213,15 @@ class HomeActivityState extends State<HomeActivity> {
       ),
     );
   }
+  void speak(String text) {
+    _textToSpeech.setVolume(volume);
+    _textToSpeech.setRate(rate);
+    if (languageCode != null) {
+      _textToSpeech.setLanguage(languageCode);
+    }
 
+    _textToSpeech.speak(text);
+  }
   Widget suggestion(String value) {
     return Container(
       child: Row(
