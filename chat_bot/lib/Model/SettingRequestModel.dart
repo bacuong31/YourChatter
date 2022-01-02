@@ -1,21 +1,21 @@
 import 'dart:convert';
-SettingModel settingJson(String str) =>
-    SettingModel.fromJson(json.decode(str));
-class SettingModel {
+SettingRequestModel settingRequestJson(String str) =>
+    SettingRequestModel.fromJson(json.decode(str));
+class SettingRequestModel {
   bool allowAutoT2s;
   bool allowPushNotification;
   bool allowVoiceRecording;
   String voiceSelection;
   double voiceRate;
 
-  SettingModel(
+  SettingRequestModel(
       {this.allowAutoT2s,
         this.allowPushNotification,
         this.allowVoiceRecording,
         this.voiceSelection,
         this.voiceRate});
 
-  SettingModel.fromJson(Map<String, dynamic> json) {
+  SettingRequestModel.fromJson(Map<String, dynamic> json) {
     allowAutoT2s = json['allow_auto_t2s'] != null ? json['allow_auto_t2s'] : null;
     allowPushNotification = json['allow_push_notification'] != null ? json['allow_push_notification'] : null;
     allowVoiceRecording = json['allow_voice_recording'] != null ? json['allow_voice_recording'] : null;

@@ -5,7 +5,7 @@ import 'LoginScreen/LoginActivity.dart';
 import 'LoginScreen/SignUpActivity.dart';
 import 'Services/SharedService.dart';
 
-Widget _defaultHome = LoginActivity();
+Widget _defaultHome = HomeActivity();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   bool isLoggedIn = await SharedService.isLoggedIn();

@@ -1,8 +1,8 @@
 import 'MessageRequestModel.dart';
 
-class Message{
+class MessageValueHolder{
   String response;
   Context context;
   bool isBot;
-  Message({this.response,this.context,this.isBot});
+  MessageValueHolder({this.response,this.context,this.isBot});
 }

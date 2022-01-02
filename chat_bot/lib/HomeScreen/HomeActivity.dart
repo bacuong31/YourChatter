@@ -1,12 +1,19 @@
 import 'package:avatar_glow/avatar_glow.dart';
-import 'package:chat_bot/Model/Message.dart';
+import 'package:chat_bot/LoginScreen/LoginActivity.dart';
+import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 import 'package:chat_bot/Model/MessageRequestModel.dart';
 import 'package:chat_bot/Model/MessageRespondModel.dart';
+import 'package:chat_bot/Model/MessageValueHolder.dart';
+import 'package:chat_bot/ProfileScreen/ProfileActivity.dart';
 import 'package:chat_bot/Services/APIService.dart';
 import 'package:chat_bot/Services/SharedService.dart';
+import 'package:chat_bot/SettingScreen/SettingActivity.dart';
 import 'package:chat_bot/config.dart';
 import 'package:flutter/material.dart';
 import 'package:bubble/bubble.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:text_to_speech/text_to_speech.dart';
@@ -24,11 +31,11 @@ class HomeActivityState extends State<HomeActivity> {
   double rate = 1;
   String languageCode;
   bool _speechEnabled = false;
-  List<Message> messages = [];
+  List<MessageValueHolder> messages = [];
   List<String> suggestions = [];
   MessageRespondModel preRespond =
       MessageRespondModel(response: "temp", context: null);
-
+  var fltrNotification = FlutterLocalNotificationsPlugin();
   final messageInsert = TextEditingController();
 
   @override
@@ -37,8 +44,48 @@ class HomeActivityState extends State<HomeActivity> {
     super.initState();
     _initSpeechToText();
     _initTextToSpeech();
-  }
+    _configureLocalTimeZone();
+    var androidInitilize = new AndroidInitializationSettings('app_icon');
+    var iOSinitilize = new IOSInitializationSettings();
+    var initilizationsSettings = InitializationSettings(android: androidInitilize, iOS: iOSinitilize);
 
+    fltrNotification.initialize(initilizationsSettings,
+        );
+  }
+  Future<void> _showNotification() async{
+    var androidDetails = new AndroidNotificationDetails(
+        "Channel ID", "Desi programmer", channelDescription: 'your channel description',
+
+        importance: Importance.max);
+    var iSODetails = new IOSNotificationDetails();
+    var generalNotificationDetails = NotificationDetails(android: androidDetails, iOS: iSODetails);
+
+    await fltrNotification.zonedSchedule(
+        0,
+        'scheduled title',
+        'scheduled body',
+        tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
+        const NotificationDetails(
+            android: AndroidNotificationDetails(
+                'your channel id', 'your channel name',
+                channelDescription: 'your channel description')),
+        androidAllowWhileIdle: true,
+        uiLocalNotificationDateInterpretation:
+        UILocalNotificationDateInterpretation.absoluteTime);
+  }
+  Future<void> _configureLocalTimeZone() async {
+    tz.initializeTimeZones();
+    final String timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
+  }
+  Future notificationSelected(String payload) async{
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Text("Notification : $payload"),
+      ),
+    );
+  }
   void _initSpeechToText() async {
     _speechEnabled = await _speechToText.initialize();
 
@@ -98,11 +145,27 @@ class HomeActivityState extends State<HomeActivity> {
         title: Text(Config.appName),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () {
-              SharedService.logout(context);
+            icon: Icon(Icons.person),
+            onPressed: () async {
+              bool isLoggedIn = await SharedService.isLoggedIn();
+              if (isLoggedIn){
+                Navigator.of(context)
+                    .push(MaterialPageRoute<bool>(builder: (BuildContext context) {
+                  return ProfileActivity();
+                }));
+              } else {
+                Navigator.of(context)
+                    .push(MaterialPageRoute<bool>(builder: (BuildContext context) {
+                  return LoginActivity();
+                }));
+              }
+
             },
+          ),
+          IconButton(
+              onPressed: _showNotification, icon: Icon(Icons.notifications)
           )
+
         ],
       ),
       body: Container(
@@ -173,7 +236,7 @@ class HomeActivityState extends State<HomeActivity> {
                       if (messageInsert.text.isEmpty) {
                         print("empty message");
                       } else {
-                        Message mess = Message(
+                        MessageValueHolder mess = MessageValueHolder(
                             response: messageInsert.text,
                             context: null,
                             isBot: false);
@@ -187,7 +250,7 @@ class HomeActivityState extends State<HomeActivity> {
                                 post: saveMess,
                                 context: preRespond.context,
                                 isLocal: true));
-                        Message res = Message(
+                        MessageValueHolder res = MessageValueHolder(
                             response: respond.response,
                             context: respond.context,
                             isBot: true);
@@ -263,7 +326,7 @@ class HomeActivityState extends State<HomeActivity> {
     );
   }
 
-  Widget chat(Message message) {
+  Widget chat(MessageValueHolder message) {
     return Container(
       padding: EdgeInsets.only(left: 20, right: 20),
       child: Row(
