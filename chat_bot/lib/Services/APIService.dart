@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:chat_bot/Model/BlogRespondModel.dart';
 import 'package:chat_bot/Model/EditProfileRequestModel.dart';
 import 'package:chat_bot/Model/LoginRequestModel.dart';
 import 'package:chat_bot/Model/LoginRespondModel.dart';
@@ -116,6 +117,16 @@ class APIService {
     } else {
       return false;
     }
+  }
+
+  static Future<BlogRespondModel> getBlog() async {
+    var url = Uri.parse(Config.apiURL + Config.blogAPI);
+    var respone = await client.get(url,
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+      },
+    );
+    return blogRespondJson(respone.body);
   }
 
 }

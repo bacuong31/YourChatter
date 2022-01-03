@@ -8,4 +8,5 @@ class Config {
   static const String saveSetting = "/api/user/save_preference";
   static const String profileAPI = "/api/user/profile";
   static const String saveProfile = "/api/user/save_profile";
+  static const String blogAPI = "/api/blog/all_blog";
 }

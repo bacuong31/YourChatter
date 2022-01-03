@@ -216,7 +216,7 @@ class _ProfileActivityState extends State<ProfileActivity> {
         context: context,
         initialDate: _selectedDate != null ? _selectedDate : DateTime.now(),
         firstDate: DateTime(1960),
-        lastDate: DateTime(2022),
+        lastDate: DateTime(2040),
         builder: (BuildContext context, Widget child) {
           return Theme(
             data: ThemeData.dark().copyWith(

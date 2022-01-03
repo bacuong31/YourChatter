@@ -37,6 +37,7 @@ dependencies:
   intl: ^0.17.0
   flutter_local_notifications: ^9.2.0
   flutter_native_timezone: ^2.0.0
+  string_to_hex: ^0.2.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:avatar_glow/avatar_glow.dart';
+import 'package:chat_bot/BlogScreen/BlogActivity.dart';
 import 'package:chat_bot/LoginScreen/LoginActivity.dart';
+import 'package:chat_bot/Model/SettingRespondModel.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -29,6 +33,7 @@ class HomeActivityState extends State<HomeActivity> {
   TextToSpeech _textToSpeech = TextToSpeech();
   double volume = 1;
   double rate = 1;
+  SettingRespondModel _settingRespondModel;
   String languageCode;
   bool _speechEnabled = false;
   List<MessageValueHolder> messages = [];
@@ -47,38 +52,56 @@ class HomeActivityState extends State<HomeActivity> {
     _configureLocalTimeZone();
     var androidInitilize = new AndroidInitializationSettings('app_icon');
     var iOSinitilize = new IOSInitializationSettings();
-    var initilizationsSettings = InitializationSettings(android: androidInitilize, iOS: iOSinitilize);
-
-    fltrNotification.initialize(initilizationsSettings,
-        );
+    var initilizationsSettings =
+        InitializationSettings(android: androidInitilize, iOS: iOSinitilize);
+    fltrNotification.initialize(
+      initilizationsSettings,
+    );
+    fetchData();
   }
-  Future<void> _showNotification() async{
-    var androidDetails = new AndroidNotificationDetails(
-        "Channel ID", "Desi programmer", channelDescription: 'your channel description',
 
+  void fetchData() async {
+    bool isLoggedIn = await SharedService.isLoggedIn();
+    if (isLoggedIn) {
+      var model = await APIService.getSetting();
+      setState(() {
+        _settingRespondModel = model;
+      });
+    }
+  }
+
+  Future<void> _showNotification(String title, String isoDatetime) async {
+    var androidDetails = new AndroidNotificationDetails(
+        "Channel ID", "Desi programmer",
+        channelDescription: 'your channel description',
         importance: Importance.max);
     var iSODetails = new IOSNotificationDetails();
-    var generalNotificationDetails = NotificationDetails(android: androidDetails, iOS: iSODetails);
-
+    var generalNotificationDetails =
+        NotificationDetails(android: androidDetails, iOS: iSODetails);
+    var timeSchedule = DateTime.parse(isoDatetime);
+    Duration dif = timeSchedule.difference(DateTime.now());
+    print("");
     await fltrNotification.zonedSchedule(
         0,
-        'scheduled title',
-        'scheduled body',
-        tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
+        'Your Chater',
+        title,
+        tz.TZDateTime.now(tz.local).add(dif),
         const NotificationDetails(
             android: AndroidNotificationDetails(
                 'your channel id', 'your channel name',
                 channelDescription: 'your channel description')),
         androidAllowWhileIdle: true,
         uiLocalNotificationDateInterpretation:
-        UILocalNotificationDateInterpretation.absoluteTime);
+            UILocalNotificationDateInterpretation.absoluteTime);
   }
+
   Future<void> _configureLocalTimeZone() async {
     tz.initializeTimeZones();
     final String timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(timeZoneName));
   }
-  Future notificationSelected(String payload) async{
+
+  Future notificationSelected(String payload) async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -86,11 +109,13 @@ class HomeActivityState extends State<HomeActivity> {
       ),
     );
   }
+
   void _initSpeechToText() async {
     _speechEnabled = await _speechToText.initialize();
 
     setState(() {});
   }
+
   void _initTextToSpeech() async {
     var language = await _textToSpeech.getLanguages();
 
@@ -99,6 +124,7 @@ class HomeActivityState extends State<HomeActivity> {
       languageCode = language[14];
     });
   }
+
   void _startListening() async {
     var locales = await _speechToText.locales();
 
@@ -127,6 +153,10 @@ class HomeActivityState extends State<HomeActivity> {
     });
   }
 
+  FutureOr onGoBack(dynamic value) {
+    fetchData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -145,27 +175,30 @@ class HomeActivityState extends State<HomeActivity> {
         title: Text(Config.appName),
         actions: [
           IconButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                    MaterialPageRoute<bool>(builder: (BuildContext context) {
+                  return BlogActivity();
+                }));
+              },
+              icon: Icon(Icons.create)),
+          IconButton(
             icon: Icon(Icons.person),
             onPressed: () async {
               bool isLoggedIn = await SharedService.isLoggedIn();
-              if (isLoggedIn){
-                Navigator.of(context)
-                    .push(MaterialPageRoute<bool>(builder: (BuildContext context) {
+              if (isLoggedIn) {
+                Navigator.of(context).push(
+                    MaterialPageRoute<bool>(builder: (BuildContext context) {
                   return ProfileActivity();
-                }));
+                })).then(onGoBack);
               } else {
-                Navigator.of(context)
-                    .push(MaterialPageRoute<bool>(builder: (BuildContext context) {
+                Navigator.of(context).push(
+                    MaterialPageRoute<bool>(builder: (BuildContext context) {
                   return LoginActivity();
                 }));
               }
-
             },
           ),
-          IconButton(
-              onPressed: _showNotification, icon: Icon(Icons.notifications)
-          )
-
         ],
       ),
       body: Container(
@@ -192,18 +225,21 @@ class HomeActivityState extends State<HomeActivity> {
                 : Container(),
             Container(
               child: ListTile(
-                leading:IconButton(
-                      icon: Icon(
-                        _speechToText.isNotListening ? Icons.mic_off : Icons.mic,
-                        color: appPrimaryColor,
-                        size: 35,
-                      ),
-                      onPressed: () {
+                leading: IconButton(
+                    icon: Icon(
+                      _speechToText.isNotListening ? Icons.mic_off : Icons.mic,
+                      color: appPrimaryColor,
+                      size: 35,
+                    ),
+                    onPressed: () {
+                      if (_settingRespondModel == null ||
+                          _settingRespondModel.preference.allowVoiceRecording ==
+                              true) {
                         _speechToText.isNotListening
                             ? _startListening()
                             : _stopListening();
-                      }),
-
+                      }
+                    }),
                 title: Container(
                   height: 40,
                   decoration: BoxDecoration(
@@ -250,8 +286,16 @@ class HomeActivityState extends State<HomeActivity> {
                                 post: saveMess,
                                 context: preRespond.context,
                                 isLocal: true));
+                        if (respond.action.data != null) {
+                          _showNotification(
+                              respond.action.data.message.replaceAllMapped(
+                                  RegExp(r'\"'), (match) => ""),
+                              respond.action.data.time);
+                        }
                         MessageValueHolder res = MessageValueHolder(
-                            response: respond.response,
+                            response: respond.response.replaceAllMapped(
+                                RegExp(r'\[http.*\]', caseSensitive: false),
+                                (match) => ""),
                             context: respond.context,
                             isBot: true);
                         setState(() {
@@ -259,7 +303,12 @@ class HomeActivityState extends State<HomeActivity> {
                           preRespond = respond;
                           suggestions = respond.context.suggestionList;
                         });
-                        speak(res.response);
+                        if (_settingRespondModel == null ||
+                            _settingRespondModel.preference.allowAutoT2s ==
+                                true) {
+                          speak(res.response);
+                        }
+                        ;
                       }
                       FocusScopeNode currentFocus = FocusScope.of(context);
                       if (!currentFocus.hasPrimaryFocus) {
@@ -276,6 +325,7 @@ class HomeActivityState extends State<HomeActivity> {
       ),
     );
   }
+
   void speak(String text) {
     _textToSpeech.setVolume(volume);
     _textToSpeech.setRate(rate);
@@ -285,6 +335,7 @@ class HomeActivityState extends State<HomeActivity> {
 
     _textToSpeech.speak(text);
   }
+
   Widget suggestion(String value) {
     return Container(
       child: Row(
@@ -312,8 +363,8 @@ class HomeActivityState extends State<HomeActivity> {
                             value,
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                color: Colors.black,
-                                ),
+                              color: Colors.black,
+                            ),
                           ),
                         )),
                       ],
@@ -350,7 +401,7 @@ class HomeActivityState extends State<HomeActivity> {
                 radius: Radius.circular(15.0),
                 color: message.isBot == false
                     ? appPrimaryColor
-                    :Color.fromRGBO(252, 186, 3, 1),
+                    : Color.fromRGBO(252, 186, 3, 1),
                 elevation: 0.0,
                 child: Padding(
                   padding: EdgeInsets.all(2.0),
@@ -365,8 +416,7 @@ class HomeActivityState extends State<HomeActivity> {
                         constraints: BoxConstraints(maxWidth: 200),
                         child: Text(
                           message.response,
-                          style: TextStyle(
-                              color: Colors.white),
+                          style: TextStyle(color: Colors.white),
                         ),
                       ))
                     ],
