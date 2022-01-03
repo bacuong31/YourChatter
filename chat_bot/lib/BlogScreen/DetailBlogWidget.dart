@@ -1,3 +1,5 @@
+
+
 import 'package:chat_bot/Model/DetailBlogRequestModel.dart';
 import 'package:chat_bot/Model/DetailBlogRespondModel.dart';
 import 'package:chat_bot/Model/MessageRequestModel.dart';
@@ -136,6 +138,10 @@ class _DetailBlogWidgetState extends State<DetailBlogWidget> {
                       height: 10,
                     ),
                     Container(child: Markdown(
+                      styleSheet: MarkdownStyleSheet(
+                        p : TextStyle(height: 1.5),
+                        textAlign: WrapAlignment.spaceAround
+                      ),
                         data: model.blog.content,
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),

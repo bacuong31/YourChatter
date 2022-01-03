@@ -44,7 +44,7 @@ class _BlogActivityState extends State<BlogActivity> {
           ),
           automaticallyImplyLeading: false,
           brightness: Brightness.dark,
-          title: Text("Blogs"),
+          title: Text("Bài viết"),
           flexibleSpace: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
