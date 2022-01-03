@@ -1,3 +1,4 @@
+import 'package:chat_bot/BlogScreen/DetailBlogWidget.dart';
 import 'package:chat_bot/Model/BlogRespondModel.dart';
 import 'package:chat_bot/config.dart';
 import 'package:flutter/cupertino.dart';
@@ -18,9 +19,9 @@ class _BlogWidgetState extends State<BlogWidget> {
   _BlogWidgetState(this.model);
   @override
   Widget build(BuildContext context) {
-    final double height = MediaQuery.of(context).size.height;
+    final Size size = MediaQuery.of(context).size;
     return GestureDetector(
-      onTap: () {},
+      onTap: () {openBlogDetail(context: context, articleId: model.articleId);},
       child: Container(
         margin: EdgeInsets.all(8.0),
         decoration: BoxDecoration(
@@ -28,6 +29,7 @@ class _BlogWidgetState extends State<BlogWidget> {
           borderRadius: BorderRadius.all(Radius.circular(20.0)),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
               margin: EdgeInsets.only(left: 10, top: 15, right: 10, bottom: 15),
@@ -36,25 +38,27 @@ class _BlogWidgetState extends State<BlogWidget> {
                 child: Image.network(
                   model.imageLink,
                   //"https://image.cooky.vn/recipe/g6/54859/s1242/cooky-recipe-637387013241463008.jpg",
-                  fit: BoxFit.cover,
-                  height: height * 0.5,
+                  fit: BoxFit.fitWidth,
+                  height: size.height * 0.25,
                 ),
               ),
             ),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 10, right: 10),
+            Container(
+              margin: EdgeInsets.only(left: 14, right: 14),
+              child: Center(
+
                 child: Text(
-                  model.title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    model.title,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
+
               ),
             ),
-            SizedBox(height: 10,),
+            SizedBox(height: 16,),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -83,16 +87,21 @@ class _BlogWidgetState extends State<BlogWidget> {
                 ) : Container(),
               ],
             ),
-            SizedBox(
-              height: 10,
-            ),
+
             Container(
-                margin: EdgeInsets.only(left: 10, right: 10,bottom: 10),
-                child: Center(child: Text(model.desc))),
+                margin: EdgeInsets.only(left: 24, right: 24,bottom: 24, top: 16),
+                child: Center(child: Text(model.desc),
+                )),
           ],
         ),
       ),
 
     );
+  }
+  void openBlogDetail({BuildContext context,String articleId}) {
+    Navigator.of(context)
+        .push(MaterialPageRoute<bool>(builder: (BuildContext context) {
+      return DetailBlogWidget(id: articleId,);
+    }));
   }
 }

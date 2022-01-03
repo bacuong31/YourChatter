@@ -9,4 +9,5 @@ class Config {
   static const String profileAPI = "/api/user/profile";
   static const String saveProfile = "/api/user/save_profile";
   static const String blogAPI = "/api/blog/all_blog";
+  static const String detailBlogAPI = "/api/blog/blog";
 }
