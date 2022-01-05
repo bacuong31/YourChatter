@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:chat_bot/Model/ChangePasswordRequestModel.dart';
 import 'package:chat_bot/Model/EditProfileRequestModel.dart';
 import 'package:chat_bot/Model/ProfileRespondModel.dart';
 import 'package:chat_bot/Services/APIService.dart';
@@ -7,6 +8,7 @@ import 'package:chat_bot/Services/SharedService.dart';
 import 'package:chat_bot/SettingScreen/SettingActivity.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -34,11 +36,16 @@ class _ProfileActivityState extends State<ProfileActivity> {
   TextEditingController paidValidUntilController = TextEditingController();
   TextEditingController displayNameController = TextEditingController();
   TextEditingController statusController = TextEditingController();
-
+  TextEditingController oldPasswordController = TextEditingController();
+  TextEditingController newPasswordController = TextEditingController();
+  TextEditingController confirmPasswordController = TextEditingController();
+  FToast fToast;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    fToast = FToast();
+    fToast.init(context);
     fetchData();
   }
 
@@ -97,6 +104,7 @@ class _ProfileActivityState extends State<ProfileActivity> {
       ),
     );
   }
+
   Widget _profileUI (BuildContext context){
     final Size size = MediaQuery.of(context).size;
     return Container(
@@ -105,36 +113,75 @@ class _ProfileActivityState extends State<ProfileActivity> {
         onTap: () {
           FocusScope.of(context).unfocus();
         },
-        child: ListView(
-          children: [
-            buildEnableFocusTextField("Tên hiển thị",
-                "Nhập tên hiển thị", displayNameController),
-            buildDisableFocusTextField("Tài khoản", userNameController),
-            buildDisableFocusTextField("Email", emailController),
-            buildDisableFocusTextField("Hạn sử dụng dịch vụ nâng cao",
-                paidValidUntilController),
-            buildDisableFocusTextField(
-                "Hạng dịch vụ", statusController),
-            buildTextBirthDay(),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Hồ sơ người dùng: ", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+              buildEnableFocusTextField("Tên hiển thị",
+                  "Nhập tên hiển thị", displayNameController),
+              buildDisableFocusTextField("Tài khoản", userNameController),
+              buildDisableFocusTextField("Email", emailController),
+              buildDisableFocusTextField("Hạn sử dụng dịch vụ nâng cao",
+                  paidValidUntilController),
+              buildDisableFocusTextField(
+                  "Hạng dịch vụ", statusController),
+              buildTextBirthDay(),
 
-            Container(
-              margin: EdgeInsets.only(top: 15),
-              child: ElevatedButton(
-                onPressed: () async {
-                  await applyChanges();
-                  Navigator.of(context).pop();
-                },
-                child: Text("Lưu"),
-                style: ElevatedButton.styleFrom(
-                    primary: appPrimaryColor,
-                    minimumSize: Size(size.width*0.9, size.height*0.055),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    )
+              Container(
+                margin: EdgeInsets.only(top: 15),
+                child: ElevatedButton(
+                  onPressed: () async {
+                    await applyChanges();
+                    _showToast("Lưu hồ sơ thành công");
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Lưu hồ sơ"),
+                  style: ElevatedButton.styleFrom(
+                      primary: appPrimaryColor,
+                      minimumSize: Size(size.width*0.9, size.height*0.055),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      )
+                  ),
                 ),
               ),
-            )
-          ],
+              SizedBox(height: 15,),
+              Divider(thickness: 2, color: Colors.black,),
+              SizedBox(height: 15,),
+              Text("Thiết lập bảo mật: ", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+              buildPasswordTextField("Mật khẩu cũ", oldPasswordController),
+              buildPasswordTextField("Mật khẩu mới", newPasswordController),
+              buildPasswordTextField("Xác nhận mật khẩu", confirmPasswordController),
+              Container(
+                margin: EdgeInsets.only(top: 15),
+                child: ElevatedButton(
+                  onPressed: () async {
+                    setState(() {
+                      isAPIcallProcess = true;
+                    });
+                    await APIService.changePassword(ChangePasswordRequestModel(oldPassword: oldPasswordController.text,
+                      newPassword: newPasswordController.text, confirmNewPassword: confirmPasswordController.text
+                    ));
+                    setState(() {
+                      isAPIcallProcess = false;
+                    });
+                    _showToast("Thay đổi mật khẩu thành công");
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Lưu mật khẩu"),
+                  style: ElevatedButton.styleFrom(
+                      primary: appPrimaryColor,
+                      minimumSize: Size(size.width*0.9, size.height*0.055),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      )
+                  ),
+                ),
+              ),
+              SizedBox(height: 15,),
+            ],
+          ),
         ),
       ),
     );
@@ -164,6 +211,44 @@ class _ProfileActivityState extends State<ProfileActivity> {
             fontSize: 16,
             color: Colors.grey.withOpacity(0.3),
           )),
+    );
+  }
+  Widget buildPasswordTextField(String label, TextEditingController controller){
+    return TextField(
+      controller: controller,
+      obscureText: true,
+      decoration: InputDecoration(
+          labelText: label,
+          hintStyle: TextStyle(
+            fontSize: 16,
+            color: Colors.grey.withOpacity(0.3),
+          )),
+    );
+  }
+
+  _showToast(String content) {
+    Widget toast = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(25.0),
+        color: Colors.greenAccent,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check),
+          SizedBox(
+            width: 12.0,
+          ),
+          Text(content),
+        ],
+      ),
+    );
+
+    fToast.showToast(
+      child: toast,
+      gravity: ToastGravity.CENTER,
+      toastDuration: Duration(seconds: 3),
     );
   }
 

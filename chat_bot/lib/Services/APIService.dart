@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:chat_bot/Model/BlogRespondModel.dart';
+import 'package:chat_bot/Model/ChangePasswordRequestModel.dart';
 import 'package:chat_bot/Model/DetailBlogRequestModel.dart';
 import 'package:chat_bot/Model/DetailBlogRespondModel.dart';
 import 'package:chat_bot/Model/EditProfileRequestModel.dart';
@@ -141,6 +142,20 @@ class APIService {
     var respone = await client.post(url,
         headers: <String, String>{
           'Content-Type': 'application/json',
+        },
+        body: jsonEncode(model.toJson()));
+
+    return detailBlogRespondJson(respone.body);
+  }
+
+  static Future<DetailBlogRespondModel> changePassword(
+      ChangePasswordRequestModel model) async {
+    var url = Uri.parse(Config.apiURL + Config.changePasswordAPI);
+    var loginDetails = await SharedService.loginDetails();
+    var respone = await client.post(url,
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+          'x-access-token': '${loginDetails.token}',
         },
         body: jsonEncode(model.toJson()));
 

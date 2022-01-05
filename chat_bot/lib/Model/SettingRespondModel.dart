@@ -51,7 +51,7 @@ class Preference {
     allowAutoT2s = json['allow_auto_t2s'] != null ? json['allow_auto_t2s'] : null;
     allowPushNotification = json['allow_push_notification'] != null ? json['allow_push_notification'] : null;
     allowVoiceRecording = json['allow_voice_recording'] != null ? json['allow_voice_recording'] : null;
-    voiceRate = json['voice_rate'] != null ? json['voice_rate'] : null;
+    voiceRate = json['voice_rate'] != null ? json['voice_rate'] + .0 : null;
     voiceSelection = json['voice_selection'] != null ? json['voice_selection'] : null;
   }
 

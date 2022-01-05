@@ -6,11 +6,14 @@ import 'LoginScreen/SignUpActivity.dart';
 import 'Services/SharedService.dart';
 
 Widget _defaultHome = HomeActivity();
+bool isLogin = false;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   bool isLoggedIn = await SharedService.isLoggedIn();
   if (isLoggedIn){
     _defaultHome = HomeActivity();
+    isLogin = true;
   }
   runApp(MyApp());
 }
@@ -20,6 +23,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
         // This is the theme of your application.

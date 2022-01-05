@@ -1,6 +1,7 @@
 import 'package:chat_bot/HomeScreen/HomeActivity.dart';
 import 'package:chat_bot/Model/LoginRequestModel.dart';
 import 'package:chat_bot/Services/APIService.dart';
+import 'package:chat_bot/main.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -165,6 +166,7 @@ class _LoginActivityState extends State<LoginActivity> {
                       }),
                       if (response)
                         {
+                          isLogin = true,
                           Navigator.pushAndRemoveUntil(context,
                               MaterialPageRoute(
                                 builder: (context) {

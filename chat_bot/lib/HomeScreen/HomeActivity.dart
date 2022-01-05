@@ -4,6 +4,8 @@ import 'package:avatar_glow/avatar_glow.dart';
 import 'package:chat_bot/BlogScreen/BlogActivity.dart';
 import 'package:chat_bot/LoginScreen/LoginActivity.dart';
 import 'package:chat_bot/Model/SettingRespondModel.dart';
+import 'package:chat_bot/UpgradeScreen/UpgradeActivity.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -22,6 +24,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:text_to_speech/text_to_speech.dart';
 import '../constants.dart';
+import '../main.dart';
 
 class HomeActivity extends StatefulWidget {
   @override
@@ -42,6 +45,7 @@ class HomeActivityState extends State<HomeActivity> {
       MessageRespondModel(response: "temp", context: null);
   var fltrNotification = FlutterLocalNotificationsPlugin();
   final messageInsert = TextEditingController();
+
 
   @override
   void initState() {
@@ -65,7 +69,9 @@ class HomeActivityState extends State<HomeActivity> {
     if (isLoggedIn) {
       var model = await APIService.getSetting();
       setState(() {
+
         _settingRespondModel = model;
+        rate = model.preference.voiceRate;
       });
     }
   }
@@ -173,7 +179,35 @@ class HomeActivityState extends State<HomeActivity> {
           ),
         ),
         title: Text(Config.appName),
+        leading: IconButton(
+          icon: Icon(Icons.person),
+          onPressed: () async {
+            bool isLoggedIn = await SharedService.isLoggedIn();
+            if (isLoggedIn) {
+              Navigator.of(context).push(
+                  MaterialPageRoute<bool>(builder: (BuildContext context) {
+                    return ProfileActivity();
+                  })).then(onGoBack);
+            } else {
+              Navigator.of(context).push(
+                  MaterialPageRoute<bool>(builder: (BuildContext context) {
+                    return LoginActivity();
+                  }));
+            }
+          },
+        ),
         actions: [
+          isLogin ? IconButton(
+            icon: Icon(FlutterIcons.arrow_alt_circle_up_faw5,
+              color: Colors.white,
+            ),
+            onPressed: (){
+              Navigator.of(context).push(
+                  MaterialPageRoute<bool>(builder: (BuildContext context) {
+                    return UpgradeActivity();
+                  }));
+            },
+          ) : Container(),
           IconButton(
               onPressed: () {
                 Navigator.of(context).push(
@@ -182,23 +216,7 @@ class HomeActivityState extends State<HomeActivity> {
                 }));
               },
               icon: Icon(Icons.create)),
-          IconButton(
-            icon: Icon(Icons.person),
-            onPressed: () async {
-              bool isLoggedIn = await SharedService.isLoggedIn();
-              if (isLoggedIn) {
-                Navigator.of(context).push(
-                    MaterialPageRoute<bool>(builder: (BuildContext context) {
-                  return ProfileActivity();
-                })).then(onGoBack);
-              } else {
-                Navigator.of(context).push(
-                    MaterialPageRoute<bool>(builder: (BuildContext context) {
-                  return LoginActivity();
-                }));
-              }
-            },
-          ),
+
         ],
       ),
       body: Container(
@@ -286,7 +304,7 @@ class HomeActivityState extends State<HomeActivity> {
                                 post: saveMess,
                                 context: preRespond.context,
                                 isLocal: true));
-                        if (respond.action.data != null) {
+                        if (respond.action != null && respond.action.data != null) {
                           _showNotification(
                               respond.action.data.message.replaceAllMapped(
                                   RegExp(r'\"'), (match) => ""),
